@@ -7,6 +7,7 @@
 #include <cctype>
 #include <QMessageBox>
 #include <iostream>
+#include <bitset>
 
 struct Position {
     int x;
@@ -59,6 +60,14 @@ private:
     std::string decryptPFString(std::string encryptedStdText);
     Position findPositionByChar(char ch);
     char findCharByPosition(Position p);
+
+    QString ewDES(QString plainText, std::string key);
+    std::vector<std::string> keyPreparation(std::string key);
+    QString DESEncryption(std::string dataBlock, std::vector< std::string > keys);
+    std::string apply_xor(std::string str1, std::string str2);
+    std::string apply_func_F(std::string str1, std::string str2);
+    std::string apply_func_E(std::string str);
+
 
 };
 

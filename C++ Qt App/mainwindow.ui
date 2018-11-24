@@ -35,6 +35,11 @@
           <string>Playfair</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>DES</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>
@@ -134,6 +139,31 @@
         </property>
         <property name="text">
          <string>Secret : </string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="page">
+       <widget class="QLabel" name="label_6">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>71</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Secret : </string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_DES_key">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>10</y>
+          <width>511</width>
+          <height>20</height>
+         </rect>
         </property>
        </widget>
       </widget>
