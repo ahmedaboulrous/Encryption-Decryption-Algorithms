@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include <iostream>
 #include <bitset>
+#include <sstream>
+#include <algorithm>
 
 struct Position {
     int x;
@@ -31,13 +33,9 @@ private slots:
     void on_pushButton_decrypt_clicked();
 
     void on_actionReset_Fields_triggered();
-
     void on_actionClear_Plain_Text_triggered();
-
     void on_actionClear_Encrypted_Text_triggered();
-
     void on_actionExit_triggered();
-
     void on_actionAbout_Qt_triggered();
 
     void on_comboBox_currentTextChanged(const QString &arg1);
@@ -62,12 +60,32 @@ private:
     char findCharByPosition(Position p);
 
     QString ewDES(QString plainText, std::string key);
+    QString dwDES(QString encryptedText, std::string key);
     std::vector<std::string> keyPreparation(std::string key);
     QString DESEncryption(std::string dataBlock, std::vector< std::string > keys);
     std::string apply_xor(std::string str1, std::string str2);
     std::string apply_func_F(std::string str1, std::string str2);
     std::string apply_func_E(std::string str);
 
+    QString ewIDES(QString plainText, std::string key);
+    QString dwIDES(QString encryptedText, std::string key);
+    std::vector< std::string > textToBinaryAscii(std::string str);
+    std::string binaryAsciiToText(std::string str);
+    std::string charToBinaryAscii(char ch);
+    char binaryAsciiToChar(std::string binaryAscii);
+
+    double ewRSA(double msg, double p, double q);
+    double dwRSA(double msg, double p, double q);
+    double RSAEncryption(double msg, double n, double e);
+    double RSADecryption(double msg, double n, double d);
+    std::pair<double, double> RSAKeys(double p, double q);
+    int gcd(int a, int h);
+
+    QString ewRC4(QString msg, QString key);
+    QString dwRC4(QString msg, QString key);
+    QString RC4Encryption(std::vector< std::bitset<8> > msg_bytes, std::vector< std::bitset<8> > keys);
+    std::vector< std::bitset<8> > keysGenerator(int msg_length, std::vector<int> s);
+    std::vector< std::bitset<8> > bytesOfMessage(std::string msg);
 
 };
 

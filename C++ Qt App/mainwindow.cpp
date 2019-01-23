@@ -33,26 +33,76 @@ void MainWindow::on_pushButton_encrypt_clicked()
         QString key = ui->lineEdit_DES_key->text();
         encryptedText = ewDES(plainText, key.toStdString());
     }
+    else if(ui->comboBox->currentIndex() == 3)
+    {
+        double p = ui->RSA_lineEdit_p->text().toDouble();
+        double q = ui->RSA_lineEdit_q->text().toDouble();
+        double dbl = ewRSA(plainText.toDouble(), p, q);
 
+        std::ostringstream strs;
+        strs << dbl;
+        encryptedText = QString::fromStdString(strs.str());
+
+        std::pair<double, double> pair = RSAKeys(p, q);
+        std::ostringstream strPrK;
+        strPrK << pair.first;
+        ui->RSA_lineEdit_prkey->setText(QString::fromStdString(strPrK.str()));
+        std::ostringstream strPuK;
+        strPuK << pair.second;
+        ui->RSA_lineEdit_pukey->setText(QString::fromStdString(strPuK.str()));
+    }
+    else if(ui->comboBox->currentIndex() == 4)
+    {
+        QString key = ui->lineEdit_rc4_key->text();
+        encryptedText = ewRC4(plainText, key);
+    }
+    else if(ui->comboBox->currentIndex() == 5)
+    {
+        QString key = ui->lineEdit_DES_key->text();
+        encryptedText = ewIDES(plainText, key.toStdString());
+    }
     ui->plainTextEdit_encrypted->document()->setPlainText(encryptedText);
 }
 
 void MainWindow::on_pushButton_decrypt_clicked()
 {
-    QString decryptedText = ui->plainTextEdit_encrypted->toPlainText();
+    QString encryptedText = ui->plainTextEdit_encrypted->toPlainText();
     QString plainText = "to be implemented";
 
     if(ui->comboBox->currentIndex() == 0)
     {
         int key = ui->lineEdit_CC_key->text().toInt();
-        plainText = dwCaesarCipher(decryptedText, key);
+        plainText = dwCaesarCipher(encryptedText, key);
     }
     else if(ui->comboBox->currentIndex() == 1)
     {
         QString secret = ui->lineEdit_PF_Secret->text();
-        plainText = dwPlayfair(decryptedText, secret);
+        plainText = dwPlayfair(encryptedText, secret);
     }
+    else if(ui->comboBox->currentIndex() == 2)
+    {
+        QString key = ui->lineEdit_DES_key->text();
+        plainText = dwDES(encryptedText, key.toStdString());
+    }
+    else if(ui->comboBox->currentIndex() == 3)
+    {
+        double p = ui->RSA_lineEdit_p->text().toDouble();
+        double q = ui->RSA_lineEdit_q->text().toDouble();
 
+        std::ostringstream pstr;
+        pstr << dwRSA(encryptedText.toDouble(), p, q);
+        plainText = QString::fromStdString(pstr.str());
+    }
+    else if(ui->comboBox->currentIndex() == 4)
+    {
+        QString key = ui->lineEdit_rc4_key->text();
+        plainText = dwRC4(encryptedText, key);
+    }
+    else if(ui->comboBox->currentIndex() == 5)
+    {
+        QString key = ui->lineEdit_DES_key->text();
+        plainText = dwIDES(encryptedText, key.toStdString());
+    }
     ui->plainTextEdit_plain->document()->setPlainText(plainText);
 }
 
@@ -94,6 +144,18 @@ void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
         ui->stackedWidget->setCurrentIndex(1);
     }
     else if(arg1 == "DES")
+    {
+        ui->stackedWidget->setCurrentIndex(2);
+    }
+    else if(arg1 == "RSA")
+    {
+        ui->stackedWidget->setCurrentIndex(3);
+    }
+    else if(arg1 == "RC4")
+    {
+        ui->stackedWidget->setCurrentIndex(4);
+    }
+    else if(arg1 == "DES with Text")
     {
         ui->stackedWidget->setCurrentIndex(2);
     }
@@ -386,6 +448,17 @@ QString MainWindow::ewDES(QString plainText, std::string key)
     QString encryptedText = DESEncryption(plainText.toStdString(), keys);
 
     return encryptedText;
+}
+
+QString MainWindow::dwDES(QString encryptedText, std::string key)
+{
+    std::vector< std::string > keys = keyPreparation(key);
+
+    std::reverse(keys.begin(), keys.end());
+
+    QString plainText = DESEncryption(encryptedText.toStdString(), keys);
+
+    return plainText;
 }
 
 std::vector< std::string > MainWindow::keyPreparation(std::string key)
@@ -686,5 +759,300 @@ std::string MainWindow::apply_func_E(std::string str)
 
     return result;
 }
+
+
+// improved DES with text Methods
+QString MainWindow::ewIDES(QString plainText, std::string key)
+{
+    std::vector< std::string > keys = keyPreparation(key);
+    std::vector< std::string > blocks = textToBinaryAscii(plainText.toStdString());
+
+    QString encryptedText;
+
+    for(int i=0; i<blocks.size(); ++i)
+        encryptedText += DESEncryption(blocks[i], keys);
+
+//    encryptedText = QString::fromStdString(binaryAsciiToText(encryptedText.toStdString()));
+
+    return encryptedText;
+}
+
+QString MainWindow::dwIDES(QString encryptedText, std::string key)
+{
+    std::vector< std::string > keys = keyPreparation(key);
+    std::reverse(keys.begin(), keys.end());
+
+    std::string stdPlainText = encryptedText.toStdString();
+    std::string allPlainText = "";
+
+    for(int i=0; i<encryptedText.size()/64; ++i)
+    {
+        allPlainText += DESEncryption(stdPlainText.substr(i*64, 64), keys).toStdString();
+    }
+
+    return QString::fromStdString(binaryAsciiToText(allPlainText));
+}
+
+std::vector< std::string > MainWindow::textToBinaryAscii(std::string str)
+{
+    std::vector< std::string > blocksOfData;
+
+    for(int i=0; i<str.size()/8; ++i)
+    {
+        std::string blockStr = str.substr(i*8, 8);
+        std::string block = "";
+
+        for(int i=0; i<8; ++i)
+            block += charToBinaryAscii(blockStr[i]);
+
+        blocksOfData.push_back(block);
+    }
+
+    if(str.size()%8 != 0)
+    {
+        int start = ((int)str.size()/8)*8;
+        int length = (int)str.size()- start;
+
+        std::string blockStr = str.substr(start, length);
+        for(int i=0; i<(8-length); ++i)
+            blockStr += " ";
+
+        std::string block = "";
+        for(int i=0; i<8; ++i)
+            block += charToBinaryAscii(blockStr[i]);
+        blocksOfData.push_back(block);
+    }
+
+    return blocksOfData;
+}
+
+std::string MainWindow::binaryAsciiToText(std::string str)
+{
+    std::string blocksOfData = "";
+
+    for(int i=0; i<str.size()/64; ++i)
+    {
+        std::string blockStr = str.substr(i*64, 64);
+        std::string block = "";
+
+        for(int i=0; i<8; ++i)
+        {
+           std::string ascii = blockStr.substr(i*8, 8);
+           block += binaryAsciiToChar(ascii);
+        }
+        blocksOfData += block;
+    }
+
+    return blocksOfData;
+}
+
+std::string MainWindow::charToBinaryAscii(char ch)
+{
+    return std::bitset<8>(int(ch)).to_string();
+}
+
+char MainWindow::binaryAsciiToChar(std::string binaryAscii)
+{
+    return char(std::bitset<8>(binaryAscii).to_ulong());
+}
+
+
+
+
+
+// RSA Methods
+
+double MainWindow::ewRSA(double msg, double p, double q)
+{
+    // generate public as first, private as second key
+    std::pair<double,double> keys = RSAKeys(p, q);
+
+    double n = p*q;
+    double e = keys.first;
+
+    return RSAEncryption(msg, n, e);
+}
+
+double MainWindow::dwRSA(double msg, double p, double q)
+{
+    // generate public as first, private as second key
+    std::pair<double,double> keys = RSAKeys(p, q);
+
+    int n = p*q;
+    int d = keys.second;
+
+    return RSADecryption(msg, n, d);
+}
+
+double MainWindow::RSAEncryption(double msg, double n, double e)
+{
+    // Encryption c = (msg ^ e) % n
+    double c = pow(msg, e);
+    c = fmod(c, n);
+    return c;
+}
+
+double MainWindow::RSADecryption(double msg, double n, double d)
+{
+    // Decryption m = (c ^ d) % n
+    double m = pow(msg, d);
+    m = fmod(m, n);
+    return m;
+}
+
+std::pair<double, double> MainWindow::RSAKeys(double p, double q)
+{
+    // Finding public key; e stands for encrypt.
+    double e = 2;
+    double phi = (p-1)*(q-1);
+    while (e < phi)
+    {
+        // e must be co-prime to phi and
+        // smaller than phi.
+        if (gcd(e, phi)==1)
+            break;
+        else
+            e++;
+    }
+
+    // Private key (d stands for decrypt)
+    // choosing d such that it satisfies
+    // d*e = 1 + k * totient
+
+    int d = e;
+    while((int)(d*e)%((int)phi) != 1)
+    {
+        d++;
+    }
+
+    return std::make_pair(e, d);
+}
+
+int MainWindow::gcd(int a, int h)
+{
+    int temp;
+    while (1)
+    {
+        temp = a%h;
+        if (temp == 0)
+          return h;
+        a = h;
+        h = temp;
+    }
+}
+
+
+
+
+
+// RC4 Methods
+
+QString MainWindow::ewRC4(QString msg, QString key)
+{
+    std::vector<int> k;
+
+    // initialize key
+    std::string stdCppKey = key.toStdString();
+    for(int i=0; i<stdCppKey.length(); ++i)
+        k.push_back(int(stdCppKey[i] - '0'));
+
+    std::vector<int> s(256);
+    std::vector<int> t(256);
+
+    // initialize vector S to [0:255]
+    for(int i=0; i<256; ++i)
+        s[i] = i;
+
+    // initialize vector T from key K
+    for(int i=0; i<256; ++i)
+        t[i] = k[i%k.size()];
+
+    // initial Permutation Of S
+    int j = 0;
+    for(int i=0; i<256; ++i)
+    {
+        j = (j + s[i] + t[i])%256;
+        std::swap(s[i], s[j]);
+    }
+
+    // prepare msg
+    std::vector< std::bitset<8> > msg_bytes = bytesOfMessage(msg.toStdString());
+
+
+    // generate a key for each byte of input
+    // e.g input: 5 bytes, generates output: 5 bytes
+    std::vector< std::bitset<8> > keys = keysGenerator((int)msg_bytes.size(), s);
+
+    return RC4Encryption(msg_bytes, keys);
+
+}
+
+QString MainWindow::dwRC4(QString msg, QString key)
+{
+    return ewRC4(msg, key);
+}
+
+QString MainWindow::RC4Encryption(std::vector< std::bitset<8> > msg_bytes, std::vector< std::bitset<8> > keys)
+{
+    std::string result = "";
+    for (int i = 0; i < msg_bytes.size(); ++i)
+    {
+        std::bitset<8> temp = std::bitset<8>(msg_bytes[i] ^ keys[i]);
+        result += temp.to_string();
+    }
+
+    // Debugging output
+    std::cout << "> Debugging Statements" << std::endl;
+
+    std::cout << "I/P: " ;
+    for(int t=0; t<msg_bytes.size(); ++t)
+        std::cout << msg_bytes[t];
+    std::cout << std::endl;
+
+    std::cout << "Key: ";
+    for(int t=0; t<keys.size(); ++t)
+        std::cout << keys[t].to_string();
+    std::cout << std::endl;
+    std::cout << "O/P: " << result << std::endl;
+
+    return QString::fromStdString(result);
+}
+
+std::vector< std::bitset<8> > MainWindow::keysGenerator(int msg_length, std::vector<int> s)
+{
+    std::vector< std::bitset<8> > keys(msg_length);
+
+    int i=0, j=0, k=0;
+    for (int lc = 0; lc < msg_length; ++lc)
+    {
+        i = (i+1)%256;
+        j = (j+s[i])%256;
+        std::swap(s[i], s[j]);
+        k = s[(s[i]+s[j])%256];
+        keys[lc] = std::bitset<8>(k);
+    }
+
+    return keys;
+}
+
+std::vector< std::bitset<8> > MainWindow::bytesOfMessage(std::string msg)
+{
+    std::vector< std::bitset<8> > msg_bytes;
+
+    for(int i=0; i<(msg.length()/8); ++i)
+    {
+        std::string msg_byte = "";
+        for(int j=0; j<8; ++j)
+        {
+            int idx = j + i*8;
+            msg_byte += msg[idx];
+        }
+        msg_bytes.push_back(std::bitset<8>(msg_byte));
+    }
+
+    return msg_bytes;
+}
+
+
 
 

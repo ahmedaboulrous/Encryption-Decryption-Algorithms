@@ -1,5 +1,5 @@
 # Encryption-Decryption-Algorithms
-A GUI C++ Qt Application to demonstrate the Encryption and Decryption Algorithms such as Caesar Cipher, Playfair Cipher and DES Cipher.
+A GUI C++ Qt Application to demonstrate the Encryption and Decryption Algorithms such as Caesar Cipher, Playfair Cipher, DES Block Cipher, RC4 Stream Cipher and RSA asymmetric Cipher.
 
 Youtube videos explaining the code
 - Caesar Cipher
@@ -10,3 +10,12 @@ Youtube videos explaining the code
 
 - DES Cipher
 	https://www.youtube.com/watch?v=dZzvQ6Kt3c4
+
+- DES Cipher with Text
+	https://www.youtube.com/watch?v=F6dDlttJ1Rs
+
+- RC4 Cipher
+	https://www.youtube.com/watch?v=1YPIAIHDXBE
+
+- RSA Cipher
+	https://www.youtube.com/watch?v=K03qUeXJkLU
